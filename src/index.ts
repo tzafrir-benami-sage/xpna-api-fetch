@@ -78,10 +78,10 @@ const queryCollection = async (collection: string, limit: number, offset: number
     return [];
   }
 
-  const docs = body as { [key: string]: unknown }[];
+  const { items } = body as { items: { [key: string]: unknown }[] };
 
   const endTime = Date.now();
-  console.info(`Query [${collection}] collection (${docs.length} docs) in ${Math.floor(
+  console.info(`Query [${collection}] collection (${items.length} docs) in ${Math.floor(
     endTime - startTime)} milliseconds`
   );
 
