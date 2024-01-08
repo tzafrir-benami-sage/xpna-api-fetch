@@ -1,4 +1,8 @@
+import crypto from 'node:crypto';
+
 const apiUrl = process.env.API_URL;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const getCollection = async (collection: string, limit: number, offset: number) => {
   const startTime = Date.now();
@@ -98,15 +102,19 @@ const limit = 2000;
 
   for (const collection of collections) {
     const items = await getCollection(collection, limit, 0);
+    await sleep(crypto.randomInt(230, 499));
     if (items.length > 0) {
       await getDocument(collection, items[items.length - 1].id as string);
+      await sleep(crypto.randomInt(230, 499));
     }
   }
 
   for (const collection of collections) {
     const items = await queryCollection(collection, limit, 0);
+    await sleep(crypto.randomInt(230, 499));
     if (items.length > 0) {
       await getDocument(collection, items[0].id as string);
+      await sleep(crypto.randomInt(230, 499));
     }
   }
 })();

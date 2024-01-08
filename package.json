@@ -3,7 +3,7 @@
   "packageManager": "yarn@4.0.2",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "private": true,
   "scripts": {
     "build": "tsc",
