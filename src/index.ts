@@ -4,6 +4,10 @@ const apiUrl = process.env.API_URL;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const randomSleep = async (min: number, max: number) => {
+  await sleep(crypto.randomInt(min, max));
+};
+
 const getCollection = async (collection: string, limit: number, offset: number) => {
   const startTime = Date.now();
 
@@ -40,14 +44,14 @@ const getDocument = async (collection: string, id: string) => {
     return {};
   }
 
-  const doc = body as { [key: string]: unknown };
+  const { item } = body as { item: { [key: string]: unknown } };
 
   const endTime = Date.now();
-  console.info(`Download [${collection}] document (${doc.id}) in ${Math.floor(
+  console.info(`Download [${collection}] document (${item.id}) in ${Math.floor(
     endTime - startTime)} milliseconds`
   );
 
-  return doc;
+  return item;
 };
 
 const queryCollection = async (collection: string, limit: number, offset: number) => {
@@ -102,19 +106,21 @@ const limit = 2000;
 
   for (const collection of collections) {
     const items = await getCollection(collection, limit, 0);
-    await sleep(crypto.randomInt(230, 499));
+    await randomSleep(338, 702);
     if (items.length > 0) {
-      await getDocument(collection, items[items.length - 1].id as string);
-      await sleep(crypto.randomInt(230, 499));
+      const id = items[items.length - 1].key || items[items.length - 1].id;
+      await getDocument(collection, id as string);
+      await randomSleep(338, 702);
     }
   }
 
   for (const collection of collections) {
     const items = await queryCollection(collection, limit, 0);
-    await sleep(crypto.randomInt(230, 499));
+    await randomSleep(338, 702);
     if (items.length > 0) {
-      await getDocument(collection, items[0].id as string);
-      await sleep(crypto.randomInt(230, 499));
+      const id = items[0].key || items[0].id;
+      await getDocument(collection, id as string);
+      await randomSleep(338, 702);
     }
   }
 })();
