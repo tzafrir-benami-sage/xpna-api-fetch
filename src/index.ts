@@ -85,7 +85,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
     endTime - startTime)} milliseconds`
   );
 
-  return docs;
+  return items;
 };
 
 const limit = 2000;
