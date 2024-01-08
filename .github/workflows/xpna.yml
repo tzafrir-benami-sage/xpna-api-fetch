@@ -27,6 +27,8 @@ jobs:
           cmd: build # will run `yarn build` command
 
       - name: Run app to generate fake API calls
+        env:
+          API_URL: ${{ vars.API_URL }}
         uses: borales/actions-yarn@v4
         with:
           cmd: start # will run `yarn start` command

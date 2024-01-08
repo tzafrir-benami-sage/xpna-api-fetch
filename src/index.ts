@@ -1,14 +1,16 @@
-const getCollection = async (collection: string, limit: number, offset: number, total = false) => {
+const apiUrl = process.env.API_URL;
+
+const getCollection = async (collection: string, limit: number, offset: number) => {
   const startTime = Date.now();
 
-  const url = `${process.env.API_URL}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["value","updated_at"]&total=${total}`;
+  const url = `${apiUrl}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["value","id","updated_at"]&total=${true}`;
   const res = await fetch(url, { method: 'GET' });
   
   const body = await res.json();
 
   if (res.status !== 200) {
     console.error(`Error fetching collection: ${url}: ${res.status}`, res.headers, body);
-    return { items: [], metadata: { hasMore: false, count: 0, total: 0 } };
+    return [];
   }
 
   const { items } = body as { items: { [key: string]: unknown }[] };
@@ -21,10 +23,33 @@ const getCollection = async (collection: string, limit: number, offset: number, 
   return items;
 };
 
-const queryCollection = async (collection: string, limit: number, offset: number, total = false) => {
+const getDocument = async (collection: string, id: string) => {
   const startTime = Date.now();
 
-  const url = `${process.env.API_URL}/query`;
+  const url = `${apiUrl}/objects/${collection}/${id}`;
+  const res = await fetch(url, { method: 'GET' });
+  
+  const body = await res.json();
+
+  if (res.status !== 200) {
+    console.error(`Error fetching document: ${url}: ${res.status}`, res.headers, body);
+    return {};
+  }
+
+  const doc = body as { [key: string]: unknown };
+
+  const endTime = Date.now();
+  console.info(`Download [${collection}] document (${doc.id}) in ${Math.floor(
+    endTime - startTime)} milliseconds`
+  );
+
+  return doc;
+};
+
+const queryCollection = async (collection: string, limit: number, offset: number) => {
+  const startTime = Date.now();
+
+  const url = `${apiUrl}/query`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -34,7 +59,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
       offset,
       filter: { id: { $ne: 'this-is-invalid-id' } },
       sort: { updated_at: 'desc' },
-      fields: ['value', 'created_at', 'updated_at']
+      fields: ['value', 'id', 'created_at', 'updated_at']
     })
   });
   
@@ -42,7 +67,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
 
   if (res.status !== 200) {
     console.error(`Error fetching collection: ${url}: ${res.status}`, res.headers, body);
-    return { items: [], metadata: { hasMore: false, count: 0, total: 0 } };
+    return [];
   }
 
   const docs = body as { [key: string]: unknown }[];
@@ -55,7 +80,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
   return docs;
 };
 
-const limit = 10;
+const limit = 2000;
 
 (async () => {
   const collections = [
@@ -72,10 +97,16 @@ const limit = 10;
   ];
 
   for (const collection of collections) {
-    await getCollection(collection, limit, 0);
+    const items = await getCollection(collection, limit, 0);
+    if (items.length > 0) {
+      await getDocument(collection, items[items.length - 1].id as string);
+    }
   }
 
   for (const collection of collections) {
-    await queryCollection(collection, limit, 0);
+    const items = await queryCollection(collection, limit, 0);
+    if (items.length > 0) {
+      await getDocument(collection, items[0].id as string);
+    }
   }
 })();
