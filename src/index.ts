@@ -11,13 +11,13 @@ const randomSleep = async (min: number, max: number) => {
 const getCollection = async (collection: string, limit: number, offset: number) => {
   const startTime = Date.now();
 
-  const url = `${apiUrl}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["value","id","updated_at"]&total=${true}`;
+  const url = `${apiUrl}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["value","id","updated_at"]`;
   const res = await fetch(url, { method: 'GET' });
   
   const body = await res.json();
 
   if (res.status !== 200) {
-    console.error(`Error fetching collection: ${url}: ${res.status}`, res.headers, body);
+    console.error(`Error fetching collection: ${url}: ${res.status}`, body);
     return [];
   }
 
@@ -40,7 +40,7 @@ const getDocument = async (collection: string, id: string) => {
   const body = await res.json();
 
   if (res.status !== 200) {
-    console.error(`Error fetching document: ${url}: ${res.status}`, res.headers, body);
+    console.error(`Error fetching document: ${url}: ${res.status}`, body);
     return {};
   }
 
@@ -74,7 +74,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
   const body = await res.json();
 
   if (res.status !== 200) {
-    console.error(`Error fetching collection: ${url}: ${res.status}`, res.headers, body);
+    console.error(`Error query collection: ${url}: ${res.status}`, body);
     return [];
   }
 
@@ -87,6 +87,31 @@ const queryCollection = async (collection: string, limit: number, offset: number
 
   return items;
 };
+
+
+const pullCollection = async (collection: string, limit: number, minUpdatedAt: number) => {
+  const startTime = Date.now();
+
+  const url = `${apiUrl}/pull/${collection}?minUpdatedAt=${minUpdatedAt}&limit=${limit}&fields=["value","id","updated_at"]`;
+  const res = await fetch(url, { method: 'GET' });
+  
+  const body = await res.json();
+
+  if (res.status !== 200) {
+    console.error(`Error pull collection: ${url}: ${res.status}`, body);
+    return [];
+  }
+
+  const items = body as { [key: string]: unknown }[];
+
+  const endTime = Date.now();
+  console.info(`Pull [${collection}] collection (${items.length} items) in ${Math.floor(
+    endTime - startTime)} milliseconds`
+  );
+
+  return items;
+};
+
 
 const limit = 2000;
 
@@ -106,21 +131,26 @@ const limit = 2000;
 
   for (const collection of collections) {
     const items = await getCollection(collection, limit, 0);
-    await randomSleep(338, 702);
+    await randomSleep(702, 1003);
     if (items.length > 0) {
       const id = items[items.length - 1].key || items[items.length - 1].id;
       await getDocument(collection, id as string);
-      await randomSleep(338, 702);
+      await randomSleep(702, 1003);
     }
   }
 
   for (const collection of collections) {
     const items = await queryCollection(collection, limit, 0);
-    await randomSleep(338, 702);
+    await randomSleep(702, 1003);
     if (items.length > 0) {
       const id = items[0].key || items[0].id;
       await getDocument(collection, id as string);
-      await randomSleep(338, 702);
+      await randomSleep(702, 1003);
     }
+  }
+
+  for (const collection of collections) {
+    const items = await pullCollection(collection, limit, 0);
+    await randomSleep(702, 1003);
   }
 })();
