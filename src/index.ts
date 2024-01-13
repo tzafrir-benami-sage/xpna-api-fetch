@@ -123,6 +123,9 @@ const pushCollection = async (collection: string, items: { [key:string]: unknown
     }
   });
 
+  // create conflict in first doc
+  docs[0].assumedMasterState.conflict = true;
+
   const url = `${apiUrl}/push/${collection}`;
   const res = await fetch(url,
     {
@@ -190,7 +193,6 @@ const limit = 2000;
 
 (async () => {
   const collections = [
-    'change',
     'change-meta',
     'plan-line',
     'plan-line-formula',
@@ -200,6 +202,7 @@ const limit = 2000;
     'location',
     'reporting-period',
     'scenario',
+    'change'
   ];
 
   for (const collection of collections) {
