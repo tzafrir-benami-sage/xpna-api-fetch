@@ -116,7 +116,7 @@ const pullCollection = async (collection: string, limit: number, minUpdatedAt: n
 const pushDefaultScenario = async (scenario: { [key:string]: unknown}) => {
   const startTime = Date.now();
 
-  const api = (scenario.api_test as number ?? 0) + 1;
+  const api = scenario.api_test as number ?? 0;
   const url = `${apiUrl}/push/scenario`;
   const res = await fetch(url,
     {
