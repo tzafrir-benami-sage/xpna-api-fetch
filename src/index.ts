@@ -89,7 +89,6 @@ const queryCollection = async (collection: string, limit: number, offset: number
   return items;
 };
 
-
 const pullCollection = async (collection: string, limit: number, minUpdatedAt: number) => {
   const startTime = Date.now();
 
@@ -111,6 +110,44 @@ const pullCollection = async (collection: string, limit: number, minUpdatedAt: n
   );
 
   return items;
+};
+
+const pushCollection = async (collection: string, items: { [key:string]: unknown}[]) => {
+  const startTime = Date.now();
+
+  const docs = items.map(item => {
+    const api = item.api_test as number ?? 0;
+    return {
+      newDocumentState: { ...item, ...{ api_test: api + 1 } },
+      assumedMasterState: item
+    }
+  });
+
+  const url = `${apiUrl}/push/${collection}`;
+  const res = await fetch(url,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        docs
+      })
+  });
+  
+  const body = await res.json();
+
+  if (res.status !== 200) {
+    console.error(`Error push collection: ${url}: ${res.status}`, body);
+    return [];
+  }
+
+  const conflicts = body as { [key: string]: unknown }[];
+
+  const endTime = Date.now();
+  console.info(`Push collection ${collection} (${conflicts}) in ${Math.floor(
+    endTime - startTime)} milliseconds`
+  );
+
+  return conflicts;
 };
 
 const pushDefaultScenario = async (scenario: { [key:string]: unknown}) => {
@@ -193,6 +230,9 @@ const limit = 2000;
       if (defaultScenario.length > 0) {
         await pushDefaultScenario(defaultScenario[0]);
       }
+    }
+    if (collection === 'change') {
+      await pushCollection(collection, items.slice(0, 50));
     }
   }
 })();
