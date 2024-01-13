@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 const apiUrl = process.env.API_URL;
+const defaultScenarioId = process.env.DEFAULT_SCENARIO_ID ?? '411cbb1e-6215-4713-b593-47db7a288193';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -92,7 +93,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
 const pullCollection = async (collection: string, limit: number, minUpdatedAt: number) => {
   const startTime = Date.now();
 
-  const url = `${apiUrl}/pull/${collection}?minUpdatedAt=${minUpdatedAt}&limit=${limit}&fields=["value","id","updated_at"]`;
+  const url = `${apiUrl}/pull/${collection}?minUpdatedAt=${minUpdatedAt}&limit=${limit}`;
   const res = await fetch(url, { method: 'GET' });
   
   const body = await res.json();
@@ -112,6 +113,41 @@ const pullCollection = async (collection: string, limit: number, minUpdatedAt: n
   return items;
 };
 
+const pushDefaultScenario = async (scenario: { [key:string]: unknown}) => {
+  const startTime = Date.now();
+
+  const api = (scenario.api_test as number ?? 0) + 1;
+  const url = `${apiUrl}/push/scenario`;
+  const res = await fetch(url,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        docs: [
+          {
+            newDocumentState: { ...scenario, ...{ api_test: api + 1 }},
+            assumedMasterState: scenario
+          }
+        ]
+      })
+  });
+  
+  const body = await res.json();
+
+  if (res.status !== 200) {
+    console.error(`Error push collection: ${url}: ${res.status}`, body);
+    return [];
+  }
+
+  const conflicts = body as { [key: string]: unknown }[];
+
+  const endTime = Date.now();
+  console.info(`Push default scenario (${conflicts}) in ${Math.floor(
+    endTime - startTime)} milliseconds`
+  );
+
+  return conflicts;
+};
 
 const limit = 2000;
 
@@ -123,10 +159,10 @@ const limit = 2000;
     'plan-line-formula',
     'formula',
     'dependency-edge',
-    'scenario',
     'department',
     'location',
     'reporting-period',
+    'scenario',
   ];
 
   for (const collection of collections) {
@@ -152,5 +188,11 @@ const limit = 2000;
   for (const collection of collections) {
     const items = await pullCollection(collection, limit, 0);
     await randomSleep(702, 1003);
+    if (collection === 'scenario') {
+      const defaultScenario = items.filter(item => item.id === defaultScenarioId);
+      if (defaultScenario.length > 0) {
+        await pushDefaultScenario(defaultScenario[0]);
+      }
+    }
   }
 })();
