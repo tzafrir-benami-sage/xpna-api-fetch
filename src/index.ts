@@ -12,7 +12,7 @@ const randomSleep = async (min: number, max: number) => {
 const getCollection = async (collection: string, limit: number, offset: number) => {
   const startTime = Date.now();
 
-  const url = `${apiUrl}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["value","id","updated_at"]`;
+  const url = `${apiUrl}/objects/${collection}?limit=${limit}&offset=${offset}&fields=["doc","id","updated_at"]`;
   const res = await fetch(url, { method: 'GET' });
   
   const body = await res.json();
@@ -68,7 +68,7 @@ const queryCollection = async (collection: string, limit: number, offset: number
       offset,
       filter: { id: { $ne: 'this-is-invalid-id' } },
       sort: { updated_at: 'desc' },
-      fields: ['value', 'id', 'created_at', 'updated_at']
+      fields: ['doc', 'id', 'created_at', 'updated_at']
     })
   });
   
