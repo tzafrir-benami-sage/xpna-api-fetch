@@ -234,7 +234,7 @@ const limit = 2000;
         await pushDefaultScenario(defaultScenario[0]);
       }
     }
-    if (collection === 'change') {
+    if (collection === 'change' && items.length > 0) {
       await pushCollection(collection, items.slice(0, 50));
     }
   }
