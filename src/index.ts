@@ -11,6 +11,8 @@ const randomSleep = async (min: number, max: number) => {
 };
 
 const getPermissions = async () => {
+  const startTime = Date.now();
+
   const url = `${apiUrl}/users/permissions`;
   const res = await fetch(url, { method: "GET" });
 
@@ -20,6 +22,11 @@ const getPermissions = async () => {
     console.error(`Error fetching permissions: ${url}: ${res.status}`, body);
     return [];
   }
+
+  const endTime = Date.now();
+  console.info(
+    `Query users permissions in ${Math.floor(endTime - startTime)} milliseconds`
+  );
 
   return body as { [key: string]: unknown };
 };
