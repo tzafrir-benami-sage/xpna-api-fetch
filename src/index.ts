@@ -31,6 +31,27 @@ const getPermissions = async () => {
   return body as { [key: string]: unknown };
 };
 
+const getShare = async () => {
+  const startTime = Date.now();
+
+  const url = `${apiUrl}/users/share`;
+  const res = await fetch(url, { method: "GET" });
+
+  const body = await res.json();
+
+  if (res.status !== 200) {
+    console.error(`Error fetching share: ${url}: ${res.status}`, body);
+    return [];
+  }
+
+  const endTime = Date.now();
+  console.info(
+    `Query users share in ${Math.floor(endTime - startTime)} milliseconds`
+  );
+
+  return body as { [key: string]: unknown };
+};
+
 const getCollection = async (
   collection: string,
   limit: number,
@@ -253,6 +274,7 @@ const limit = 2000;
   ];
 
   await getPermissions();
+  await getShare();
 
   for (const collection of collections) {
     const items = await getCollection(collection, limit, 0);
